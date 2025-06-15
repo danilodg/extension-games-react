@@ -1,13 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "Minha Extensão Vite",
+  "name": "Minha Extensão",
   "version": "1.0",
-  "description": "Extensão criada com Vite + React + TypeScript",
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": "icon.png"
+  "background": {
+    "service_worker": "background.js"
   },
-  "icons": {
-    "128": "icon.png"
-  }
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": ["tabs", "scripting", "storage"],
+  "content_scripts": [
+    {
+      "matches": ["*://store.steampowered.com/app/*"],
+      "js": ["content.js"]
+    }
+  ]
 }

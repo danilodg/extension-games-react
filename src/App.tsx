@@ -1,29 +1,90 @@
-import { Box, Typography, TextField, Button, Divider, Card, CardContent, CardMedia } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Divider,
+  Card,
+  CardContent,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import './popup.css';
+import { useEffect, useState } from "react";
+import "./popup.css";
 
-const games = [
-  {
-    title: "Cyberpunk 2077",
-    image: "https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg",
-    discount: "50% OFF",
-    price: "R$99,90 → R$49,95"
-  },
-  {
-    title: "Red Dead Redemption 2",
-    image: "https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg",
-    discount: "67% OFF",
-    price: "R$249,00 → R$82,17"
-  },
-  {
-    title: "Elden Ring",
-    image: "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg",
-    discount: "30% OFF",
-    price: "R$259,90 → R$181,93"
-  },
+type GameInfo = {
+  gameName: string;
+  price: string;
+};
+
+const mockPrices = [
+  { site: "Nuuvem", price: "R$39,90" },
+  { site: "Green Man Gaming", price: "R$35,00" },
+  { site: "Humble Bundle", price: "R$37,50" },
 ];
 
 const App = () => {
+  const [game, setGame] = useState<GameInfo | null>(null);
+
+  useEffect(() => {
+    // Função para buscar dados do storage e atualizar estado
+    function fetchGameFromStorage() {
+      chrome.storage.local.get("currentGame", (result) => {
+        if (result.currentGame) {
+          setGame(result.currentGame);
+        } else {
+          setGame(null);
+        }
+      });
+    }
+
+    fetchGameFromStorage();
+
+    // Escuta alterações no storage para atualizar em tempo real
+    function onStorageChanged(changes: { [key: string]: chrome.storage.StorageChange },
+      areaName: string) {
+      if (areaName === "local" && changes.currentGame) {
+        setGame(changes.currentGame.newValue || null);
+      }
+    }
+
+    chrome.storage.onChanged.addListener(onStorageChanged);
+
+    // Cleanup
+    return () => {
+      chrome.storage.onChanged.removeListener(onStorageChanged);
+    };
+  }, []);
+
+
+  useEffect(() => {
+    async function requestGameInfo() {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tabs.length === 0) {
+        setGame(null);
+        return;
+      }
+      const tab = tabs[0];
+      if (!tab.url || !tab.url.includes("store.steampowered.com/app/")) {
+        setGame(null);
+        return;
+      }
+      chrome.tabs.sendMessage(tab.id!, { type: "CHECK_STEAM" }, (response) => {
+        if (chrome.runtime.lastError) {
+          setGame(null);
+          return;
+        }
+        if (response && response.type === "GAME_INFO" && response.data) {
+          setGame(response.data);
+        } else {
+          setGame(null);
+        }
+      });
+    }
+    requestGameInfo();
+  }, []);
+
+
+
   return (
     <Box
       sx={{
@@ -56,21 +117,35 @@ const App = () => {
 
       {/* Conteúdo principal */}
       <Box sx={{ p: 2, flex: 1, overflowY: "auto", bgcolor: "background.paper" }}>
-        {games.map((game, index) => (
-          <Card key={index} sx={{ display: "flex", mb: 2, borderRadius: 2 }}>
-            <CardMedia
-              component="img"
-              sx={{ width: 120 }}
-              image={game.image}
-              alt={game.title}
-            />
-            <CardContent sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" fontWeight="bold">{game.title}</Typography>
-              <Typography variant="body2" color="success.main">{game.discount}</Typography>
-              <Typography variant="body2">{game.price}</Typography>
-            </CardContent>
-          </Card>
-        ))}
+        {game ? (
+          <>
+            <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+              Jogo atual: {game.gameName}
+            </Typography>
+            <Typography variant="body2" mb={2}>
+              Preço na Steam: {game.price}
+            </Typography>
+
+            <Typography variant="subtitle2" fontWeight="bold" mb={1}>
+              Mais barato em:
+            </Typography>
+
+            {mockPrices.map((site, i) => (
+              <Card key={i} sx={{ display: "flex", mb: 1, borderRadius: 2 }}>
+                <CardContent sx={{ flex: 1 }}>
+                  <Typography variant="body1">{site.site}</Typography>
+                  <Typography variant="body2" color="success.main">
+                    {site.price}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        ) : (
+          <Typography variant="body2">
+            Acesse a página de um jogo na Steam para ver as promoções.
+          </Typography>
+        )}
       </Box>
 
       {/* Footer */}

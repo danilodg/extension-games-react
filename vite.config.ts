@@ -1,19 +1,21 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = resolve(__filename, '..');
 
 export default defineConfig({
-  plugins: [react()],
   build: {
-    outDir: 'dist',
     rollupOptions: {
       input: {
-        popup: resolve(__dirname, 'popup.html'),
+        popup: 'popup.html',
+        background: 'src/background/background.ts'  // <-- aqui
+      },
+      output: {
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name].js',
+        assetFileNames: '[name].[ext]'
       }
-    }
-  }
+    },
+    outDir: 'dist',
+    emptyOutDir: true
+  },
+  plugins: [react()]
 });
