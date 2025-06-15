@@ -1,0 +1,9 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  max-width: 600px; /* largura fixa (pode ajustar) */
+  max-height: 600px; /* altura máxima */
+  overflow-y: auto; /* aparece barra de rolagem se passar do max */
+  font-family: 'Roboto', sans-serif;
+  background: transparent;
+}
