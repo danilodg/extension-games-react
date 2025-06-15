@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Minha Extensão Vite",
+  "version": "1.0",
+  "description": "Extensão criada com Vite + React + TypeScript",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "icons": {
+    "128": "icon.png"
+  }
+}
