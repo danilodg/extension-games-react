@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Minha Extensão",
+  "name": "Promoções de Jogos",
   "version": "1.0",
+  "description": "Compare preços de jogos entre diferentes lojas",
   "background": {
     "service_worker": "background.js"
   },
@@ -9,6 +10,10 @@
     "default_popup": "popup.html"
   },
   "permissions": ["tabs", "scripting", "storage"],
+  "host_permissions": [
+    "https://store.steampowered.com/*",
+    "https://www.cheapshark.com/*"
+  ],
   "content_scripts": [
     {
       "matches": ["*://store.steampowered.com/app/*"],
